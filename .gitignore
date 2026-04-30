@@ -1,0 +1,42 @@
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+venv/
+ENV/
+.venv
+
+node_modules/
+.next/
+build/
+dist/
+*.egg-info/
+
+ml/datasets/images/
+ml/datasets/labels/
+ml/artifacts/
+.temp/
+
+.env
+.env.local
+*.log
+
+.DS_Store
+.cursor/
+.vscode/
+.idea/
+
+# ML artifacts
+*.pt
+*.pth
+*.onnx
+*.tflite
+
+# Optional Next.js cache
+.next
+out
+
+# Optional output
+coverage
