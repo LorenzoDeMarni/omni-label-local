@@ -1,6 +1,6 @@
 # omni-label-local
 
-A self-contained image labeling tool that lets you clone, install, label, and train a YOLOv11 model — no cloud, no accounts, no complexity.
+A self-contained image labeling tool that lets you clone, install, label, and train a YOLOv11 model — no cloud, no accounts, no complexity. Everything runs locally on your machine.
 
 ## Prerequisites
 
@@ -12,7 +12,7 @@ A self-contained image labeling tool that lets you clone, install, label, and tr
 
 ---
 
-## Full pipeline
+## Quick Start
 
 ### 1. Clone and install
 
@@ -22,88 +22,109 @@ cd omni-label-local
 bash install.sh
 ```
 
-`install.sh` creates two Python virtual environments and installs frontend packages:
+`install.sh` sets up two Python virtual environments and installs frontend packages:
 
 | Venv | Purpose |
 |------|---------|
-| `.venv/` | FastAPI backend |
-| `.venv-train/` | PyTorch + Ultralytics (for training) |
+| `.venv/` | FastAPI backend + frame extraction (requires OpenCV) |
+| `.venv-train/` | PyTorch + Ultralytics for model training |
+
+The install script also creates the `dataset/` folder structure and default `classes.txt` / `data.yaml` files.
 
 ---
 
 ### 2. Add your raw data
 
-**Option A — drop images directly:**
+Choose **Option A** (images) or **Option B** (videos):
+
+#### Option A — Drop images directly
+
+Place image files into:
 
 ```
-dataset/images/train/   ← put unlabeled JPGs / PNGs here
+dataset/images/train/
 ```
 
-Then skip to step 4.
+Supported formats: `.jpg`, `.jpeg`, `.png`, `.bmp`, `.tif`, `.tiff`
 
-**Option B — drop videos (and extract frames):**
+Then skip to step 4 below.
+
+#### Option B — Drop videos and extract frames
+
+1. Place video files into:
 
 ```
-dataset/videos/         ← put .mp4 / .mov / .avi files here
+dataset/videos/
 ```
 
----
+Supported formats: `.mp4`, `.mov`, `.avi`, `.mkv`, `.m4v`, `.webm`
 
-### 3. Extract frames from videos
+2. Extract frames (run from repo root):
 
 ```bash
-# 50 frames per video (default)
+# Extract 50 frames per video (default)
 .venv/bin/python scripts/1_extract_frames.py
 
-# Custom frame count
+# Extract custom frame count
 .venv/bin/python scripts/1_extract_frames.py --frames-per-video 100
 
-# Single video
-.venv/bin/python scripts/1_extract_frames.py --video dataset/videos/myvid.mp4 --frames-per-video 200
+# Extract from a single video
+.venv/bin/python scripts/1_extract_frames.py --video dataset/videos/myvideo.mp4 --frames-per-video 200
 ```
 
-Frames are saved to `dataset/images/train/`.
+Extracted frames are saved to `dataset/images/train/`.
+
+**Note:** The first time you run frame extraction, you may need to install OpenCV:
+
+```bash
+.venv/bin/pip install opencv-python
+```
 
 ---
 
-### 4. Split into train / val / test
+### 3. Split images into train / val / test
 
-Randomly distributes all images 70 % train · 20 % val · 10 % test.
+Randomly distributes all images: 70% train · 20% validation · 10% test
 
 ```bash
 .venv/bin/python scripts/2_split_dataset.py
 ```
 
-Run this **once** before you start labeling. It is safe to re-run — images already in a split folder are left in place.
+**Important:** Run this **once** before you start heavy labeling. It's safe to re-run — images already in a split folder stay in place. However, if you add more images after splitting and labeling, labels may become out of sync with the new split.
 
 ---
 
-### 5. Label images
+### 4. Label images
 
-Start the backend and frontend:
+Start the labeling UI:
 
 ```bash
 bash start.sh
 ```
 
-Then open **http://localhost:3000** in your browser.
+This starts:
+- **Backend** on `http://localhost:8000`
+- **Frontend** (labeler) on `http://localhost:3000`
 
-**Labeling workflow:**
+Open your browser to **`http://localhost:3000`** and you're ready to label.
 
-1. The labeler opens to the `train` split automatically.
-2. Click and drag on the canvas to draw bounding boxes.
-3. Add class names in the right rail (they are saved to `dataset/classes.txt`).
-4. Use **A / D** or arrow keys to move between images.
-5. Labels are auto-saved as you go to `dataset/labels/<split>/`.
-6. Switch splits with the dropdown in the right rail.
+#### Labeling workflow
 
-**Keyboard shortcuts:**
+1. The labeler starts in the `train` split by default.
+2. Click and drag on the canvas to draw bounding boxes around objects.
+3. Right-click (or use the UI) to assign a class to each box.
+4. Add class names in the right panel — they are automatically saved to `dataset/classes.txt`.
+5. Use **A / D** keys or arrow keys to navigate between images.
+6. Labels are auto-saved as YOLO `.txt` files in `dataset/labels/<split>/`.
+7. Switch between splits (train/val/test) using the dropdown in the right panel.
+
+#### Keyboard shortcuts
 
 | Key | Action |
 |-----|--------|
-| `A` / `←` | Previous image |
-| `D` / `→` | Next image |
-| `0`–`9` | Select class |
+| `A` / `←` Arrow | Previous image |
+| `D` / `→` Arrow | Next image |
+| `0`–`9` | Select class (0 = class 0, 9 = class 9) |
 | `Ctrl+Z` | Undo |
 | `Ctrl+Shift+Z` | Redo |
 | `Ctrl+C` | Copy selected box |
@@ -111,69 +132,255 @@ Then open **http://localhost:3000** in your browser.
 | `R` | Toggle resize mode |
 | `Delete` | Remove selected box |
 
-Press **Ctrl+C** in the terminal to stop both servers.
+#### Stopping the servers
+
+Press **Ctrl+C** in the terminal running `start.sh` to stop both backend and frontend gracefully.
+
+#### Troubleshooting
+
+| Issue | Solution |
+|-------|----------|
+| **"Cannot reach backend API"** | Run `bash start.sh` first. Check `.backend.log` for errors. |
+| **Frontend shows blank** | Wait a few seconds for Next.js to compile, then refresh the page. |
+| **Dataset not loading** | Paste the absolute path to the `dataset/` folder in the UI and click "Set dataset path", then reload. |
+| **No images appear** | Verify images are in `dataset/images/train/`, `dataset/images/val/`, or `dataset/images/test/`. |
 
 ---
 
-### 6. Train
+### 5. Train your YOLOv11 model
 
-Edit the config block at the top of `scripts/3_train.py`:
+Once you've labeled enough images, train a model:
+
+1. Edit the training config at the top of `scripts/3_train.py`:
 
 ```python
-MODEL    = "yolo11m.pt"  # yolo11n / yolo11s / yolo11m / yolo11l / yolo11x
-EPOCHS   = 100
-BATCH    = 8             # reduce to 4 if GPU runs out of memory
-IMGSZ    = 640
-PATIENCE = 30
-DEVICE   = None          # None = auto-detect GPU, or "cpu"
-RUN_NAME = "run1"
+MODEL    = "yolo11m.pt"   # yolo11n / yolo11s / yolo11m / yolo11l / yolo11x
+EPOCHS   = 100            # number of training epochs
+BATCH    = 8              # batch size (reduce to 4 if GPU memory runs out)
+IMGSZ    = 640            # input image size
+PATIENCE = 30             # early stopping patience (0 = disable)
+WORKERS  = 0              # dataloader workers (0 is safest on Windows)
+DEVICE   = None           # None = auto-detect GPU; "cpu" to force CPU training
+RUN_NAME = "run1"         # name for this training run
 ```
 
-Then run:
+2. Activate the training venv and run:
 
 ```bash
-source .venv-train/bin/activate      # Linux / macOS
-# .venv-train\Scripts\activate       # Windows
+# Linux / macOS
+source .venv-train/bin/activate
+python scripts/3_train.py
 
+# Windows
+.venv-train\Scripts\activate
 python scripts/3_train.py
 ```
 
-Best weights are saved to `runs/<RUN_NAME>/weights/best.pt`.
+The training script will:
+- Read all labeled images and labels from `dataset/`
+- Use class names from `dataset/classes.txt`
+- Train YOLOv11 on your labeled data
+- Save best weights to `runs/<RUN_NAME>/weights/best.pt`
 
----
+#### GPU and Performance
 
-## Dataset folder structure
-
-```
-dataset/
-├── videos/              ← drop raw videos here
-├── images/
-│   ├── train/           ← training images
-│   ├── val/             ← validation images
-│   └── test/            ← test images
-├── labels/
-│   ├── train/           ← YOLO .txt label files (auto-generated by labeler)
-│   ├── val/
-│   └── test/
-├── classes.txt          ← one class name per line (managed by labeler)
-└── data.yaml            ← YOLO training config (read by training script)
-```
-
----
-
-## Troubleshooting
-
-**"Cannot reach backend API"** — run `bash start.sh` first. Check `.backend.log` for errors.
-
-**Frontend shows blank** — wait a few seconds for Next.js to compile, then refresh.
-
-**Dataset not loading in labeler** — paste the absolute path to the `dataset/` folder in the right rail and click "Set dataset path", then reload the page.
-
-**GPU out of memory** — reduce `BATCH` in `scripts/3_train.py` (try 4 or 2).
-
-**Training is very slow** — make sure PyTorch detects your GPU. Check with:
+- **GPU auto-detection:** By default, the script detects and uses your GPU (if available). Training on GPU is much faster.
+- **CPU training:** If you don't have a GPU or want to force CPU training, set `DEVICE = "cpu"` in the config.
+- **GPU out of memory:** If you see CUDA out-of-memory errors, reduce `BATCH` (try 4 or 2) in the config.
+- **Check GPU availability:**
 
 ```bash
 source .venv-train/bin/activate
-python -c "import torch; print(torch.cuda.is_available(), torch.cuda.get_device_name(0) if torch.cuda.is_available() else 'no GPU')"
+python -c "import torch; print('GPU available:', torch.cuda.is_available()); print('GPU name:', torch.cuda.get_device_name(0) if torch.cuda.is_available() else 'N/A')"
 ```
+
+---
+
+## Dataset Folder Structure
+
+```
+dataset/
+├── videos/                ← optional: drop raw videos here for frame extraction
+├── images/
+│   ├── train/             ← training images (after split, or drop here directly)
+│   ├── val/               ← validation images (auto-created by split script)
+│   └── test/              ← test images (auto-created by split script)
+├── labels/
+│   ├── train/             ← YOLO .txt label files (auto-generated by labeler)
+│   ├── val/               ← validation labels
+│   └── test/              ← test labels
+├── classes.txt            ← one class name per line (auto-managed by labeler)
+└── data.yaml              ← YOLO training config (auto-created by install, updated by training script)
+```
+
+### What goes where?
+
+- **Images:** JPEG / PNG files go into the appropriate split folder (`train/`, `val/`, `test/`).
+- **Videos:** Raw video files go into `videos/` before frame extraction.
+- **Labels:** Auto-generated by the labeler. Do not edit manually unless you know YOLO format.
+- **Classes:** Manage via the labeler UI. One class per line in `classes.txt`.
+
+---
+
+## Full Workflow Example
+
+```bash
+# 1. Clone and install
+git clone <repo-url> omni-label-local
+cd omni-label-local
+bash install.sh
+
+# 2. Add videos
+cp ~/my_videos/*.mp4 dataset/videos/
+
+# 3. Extract frames
+.venv/bin/python scripts/1_extract_frames.py --frames-per-video 50
+
+# 4. Split into train/val/test
+.venv/bin/python scripts/2_split_dataset.py
+
+# 5. Start labeling
+bash start.sh
+# Open http://localhost:3000 in browser
+# Label your images...
+# Press Ctrl+C when done
+
+# 6. Train the model
+source .venv-train/bin/activate
+python scripts/3_train.py
+
+# Best weights saved to: runs/run1/weights/best.pt
+```
+
+---
+
+## Project Structure
+
+| Path | Purpose |
+|------|---------|
+| `backend/` | FastAPI backend (dataset API, image serving, label I/O) |
+| `frontend/` | Next.js 15 + React 19 labeling UI |
+| `scripts/` | Python utilities (frame extraction, dataset split, training) |
+| `dataset/` | Your images, labels, and training configuration |
+| `install.sh` | One-shot setup script (creates venvs, installs deps) |
+| `start.sh` | Starts backend + frontend together |
+| `requirements-train.txt` | PyTorch + Ultralytics for training |
+
+---
+
+## Backend API (Advanced)
+
+The backend runs on `http://localhost:8000` and provides a REST API for the frontend. Key endpoints:
+
+| Method | Endpoint | Purpose |
+|--------|----------|---------|
+| `GET` | `/healthz` | Health check (returns `{"status": "ok"}`) |
+| `GET` / `PUT` | `/api/v1/datasets/current/root` | Get/set dataset root path |
+| `POST` | `/api/v1/datasets/current/root/pick` | Open native folder picker |
+| `GET` / `PUT` | `/api/v1/datasets/current/classes` | Get/set class names |
+| `GET` | `/api/v1/datasets/current/splits/{split}/images` | List images in a split |
+| `GET` | `/api/v1/datasets/current/splits/{split}/images/{filename}` | Download image |
+| `GET` | `/api/v1/datasets/current/splits/{split}/labels/{stem}.txt` | Read label file |
+| `PUT` | `/api/v1/datasets/current/splits/{split}/labels/{stem}.txt` | Save/delete label |
+
+Environment variables:
+
+- `OMNI_LABEL_DATASET`: Absolute path to your dataset root. If not set, defaults to `<repo>/dataset/`.
+- `NEXT_PUBLIC_API_BASE`: Frontend API base URL (default: `http://localhost:8000/api/v1`).
+
+---
+
+## Common Issues & Solutions
+
+### Installation
+
+| Problem | Solution |
+|---------|----------|
+| **"Python 3 not found"** | Install Python 3.10+ from https://python.org |
+| **"Node.js not found"** | Install Node 18+ from https://nodejs.org |
+| **"OpenCV not found"** when extracting frames | Run `.venv/bin/pip install opencv-python` |
+
+### Running
+
+| Problem | Solution |
+|---------|----------|
+| **"Backend venv not found"** when running `start.sh` | Run `bash install.sh` first |
+| **"API connection failed"** | Check `.backend.log` for errors. Ensure port 8000 is not in use. |
+| **Frontend shows "Cannot reach API"** | Wait 10 seconds for both servers to fully start. Check `.frontend.log` and `.backend.log`. |
+| **Port 8000 or 3000 already in use** | Kill the process using that port or edit `start.sh` to use different ports. |
+
+### Labeling
+
+| Problem | Solution |
+|---------|----------|
+| **Images not loading** | Verify images exist in `dataset/images/train/` (or val/test). Use absolute path in UI if needed. |
+| **Labels not saving** | Check `.backend.log`. Verify `dataset/labels/train/` exists and is writable. |
+| **Classes not showing** | Refresh the page. Check that `dataset/classes.txt` is not empty. |
+
+### Training
+
+| Problem | Solution |
+|---------|----------|
+| **"No GPU detected"** | Ensure PyTorch can detect your GPU: `python -c "import torch; print(torch.cuda.is_available())"` |
+| **"CUDA out of memory"** | Reduce `BATCH` size in `scripts/3_train.py` (try 4 or 2). |
+| **"No module named 'cv2'"** during training | Run `.venv-train/bin/pip install opencv-python` |
+| **Training is very slow** | Check GPU usage with `nvidia-smi`. If GPU usage is low, set `WORKERS=0` or reduce `BATCH`. |
+
+---
+
+## Tips & Best Practices
+
+1. **Start small:** Label 50-100 images first to verify the workflow before investing time in a large dataset.
+2. **Balanced classes:** Try to have roughly equal numbers of each class (e.g., 100 cars, 100 people, 100 bikes) for best training results.
+3. **Data quality:** Clear, well-lit images with visible objects produce better models.
+4. **Multiple training runs:** Try different model sizes (`yolo11n` is faster, `yolo11x` is more accurate) and hyperparameters to find what works for your data.
+5. **Save best weights:** After training, manually copy `runs/<RUN_NAME>/weights/best.pt` to a safe location for production use.
+6. **Re-export for inference:** If you trained locally, remember to export the `.pt` file to other formats (ONNX, TensorFlow) if deploying to other systems.
+
+---
+
+## Environment Setup (Manual Alternative)
+
+If you prefer not to use `install.sh`, you can set up manually:
+
+```bash
+# Create backend venv
+python3 -m venv .venv
+.venv/bin/pip install -r backend/requirements.txt
+.venv/bin/pip install opencv-python  # needed for frame extraction
+
+# Create training venv
+python3 -m venv .venv-train
+.venv-train/bin/pip install -r requirements-train.txt
+
+# Install frontend
+cd frontend && npm install && cd ..
+
+# Create dataset structure
+mkdir -p dataset/{images/train,images/val,images/test,labels/train,labels/val,labels/test,videos}
+echo "object" > dataset/classes.txt
+cat > dataset/data.yaml <<EOF
+path: .
+train: images/train
+val: images/val
+test: images/test
+names:
+  0: object
+EOF
+```
+
+---
+
+## License & Attribution
+
+This project uses:
+- **FastAPI** – async web framework
+- **Next.js / React** – UI framework
+- **Ultralytics YOLOv11** – object detection model
+- **OpenCV** – computer vision library
+
+---
+
+## Support & Contributing
+
+For issues, questions, or feature requests, check the backend logs (`.backend.log`, `.frontend.log`) for error details. Most problems are easily resolved by re-running `install.sh` or checking paths in the UI.
