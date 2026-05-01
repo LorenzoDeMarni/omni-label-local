@@ -12,9 +12,27 @@ A self-contained image labeling tool that lets you clone, install, label, and tr
 
 ---
 
+## Platform Support
+
+This project is **fully cross-platform** and works on **Windows, macOS, and Linux**.
+
+| Platform | Install | Start | Scripts |
+|----------|---------|-------|---------|
+| **Linux / macOS** | `bash install.sh` | `bash start.sh` | `.venv/bin/python` |
+| **Windows** | `install.bat` | `start.bat` | `.venv\Scripts\python` |
+
+Key differences:
+- **Linux/macOS** uses shell scripts (`.sh`) and Unix-style paths (`/`)
+- **Windows** uses batch files (`.bat`) and Windows-style paths (`\`)
+- All Python code is identical across platforms
+
+---
+
 ## Quick Start
 
 ### 1. Clone and install
+
+**On Linux / macOS:**
 
 ```bash
 git clone <repo-url> omni-label-local
@@ -22,7 +40,15 @@ cd omni-label-local
 bash install.sh
 ```
 
-`install.sh` sets up two Python virtual environments and installs frontend packages:
+**On Windows:**
+
+```cmd
+git clone <repo-url> omni-label-local
+cd omni-label-local
+install.bat
+```
+
+Both scripts set up two Python virtual environments and install frontend packages:
 
 | Venv | Purpose |
 |------|---------|
@@ -61,6 +87,8 @@ Supported formats: `.mp4`, `.mov`, `.avi`, `.mkv`, `.m4v`, `.webm`
 
 2. Extract frames (run from repo root):
 
+**On Linux / macOS:**
+
 ```bash
 # Extract 50 frames per video (default)
 .venv/bin/python scripts/1_extract_frames.py
@@ -72,12 +100,33 @@ Supported formats: `.mp4`, `.mov`, `.avi`, `.mkv`, `.m4v`, `.webm`
 .venv/bin/python scripts/1_extract_frames.py --video dataset/videos/myvideo.mp4 --frames-per-video 200
 ```
 
+**On Windows:**
+
+```cmd
+REM Extract 50 frames per video (default)
+.venv\Scripts\python scripts\1_extract_frames.py
+
+REM Extract custom frame count
+.venv\Scripts\python scripts\1_extract_frames.py --frames-per-video 100
+
+REM Extract from a single video
+.venv\Scripts\python scripts\1_extract_frames.py --video dataset\videos\myvideo.mp4 --frames-per-video 200
+```
+
 Extracted frames are saved to `dataset/images/train/`.
 
 **Note:** The first time you run frame extraction, you may need to install OpenCV:
 
+**On Linux / macOS:**
+
 ```bash
 .venv/bin/pip install opencv-python
+```
+
+**On Windows:**
+
+```cmd
+.venv\Scripts\pip install opencv-python
 ```
 
 ---
@@ -86,8 +135,16 @@ Extracted frames are saved to `dataset/images/train/`.
 
 Randomly distributes all images: 70% train · 20% validation · 10% test
 
+**On Linux / macOS:**
+
 ```bash
 .venv/bin/python scripts/2_split_dataset.py
+```
+
+**On Windows:**
+
+```cmd
+.venv\Scripts\python scripts\2_split_dataset.py
 ```
 
 **Important:** Run this **once** before you start heavy labeling. It's safe to re-run — images already in a split folder stay in place. However, if you add more images after splitting and labeling, labels may become out of sync with the new split.
@@ -98,8 +155,16 @@ Randomly distributes all images: 70% train · 20% validation · 10% test
 
 Start the labeling UI:
 
+**On Linux / macOS:**
+
 ```bash
 bash start.sh
+```
+
+**On Windows:**
+
+```cmd
+start.bat
 ```
 
 This starts:
@@ -134,7 +199,13 @@ Open your browser to **`http://localhost:3000`** and you're ready to label.
 
 #### Stopping the servers
 
+**On Linux / macOS:**
+
 Press **Ctrl+C** in the terminal running `start.sh` to stop both backend and frontend gracefully.
+
+**On Windows:**
+
+Close the "Omni-Label Backend" and "Omni-Label Frontend" windows to stop the servers.
 
 #### Troubleshooting
 
@@ -189,8 +260,17 @@ The training script will:
 - **GPU out of memory:** If you see CUDA out-of-memory errors, reduce `BATCH` (try 4 or 2) in the config.
 - **Check GPU availability:**
 
+**On Linux / macOS:**
+
 ```bash
 source .venv-train/bin/activate
+python -c "import torch; print('GPU available:', torch.cuda.is_available()); print('GPU name:', torch.cuda.get_device_name(0) if torch.cuda.is_available() else 'N/A')"
+```
+
+**On Windows:**
+
+```cmd
+.venv-train\Scripts\activate
 python -c "import torch; print('GPU available:', torch.cuda.is_available()); print('GPU name:', torch.cuda.get_device_name(0) if torch.cuda.is_available() else 'N/A')"
 ```
 
@@ -224,6 +304,8 @@ dataset/
 
 ## Full Workflow Example
 
+**On Linux / macOS:**
+
 ```bash
 # 1. Clone and install
 git clone <repo-url> omni-label-local
@@ -252,6 +334,36 @@ python scripts/3_train.py
 # Best weights saved to: runs/run1/weights/best.pt
 ```
 
+**On Windows:**
+
+```cmd
+REM 1. Clone and install
+git clone <repo-url> omni-label-local
+cd omni-label-local
+install.bat
+
+REM 2. Add videos
+copy C:\path\to\your\videos\*.mp4 dataset\videos\
+
+REM 3. Extract frames
+.venv\Scripts\python scripts\1_extract_frames.py --frames-per-video 50
+
+REM 4. Split into train/val/test
+.venv\Scripts\python scripts\2_split_dataset.py
+
+REM 5. Start labeling
+start.bat
+REM Open http://localhost:3000 in browser
+REM Label your images...
+REM Close the windows when done
+
+REM 6. Train the model
+.venv-train\Scripts\activate
+python scripts\3_train.py
+
+REM Best weights saved to: runs\run1\weights\best.pt
+```
+
 ---
 
 ## Project Structure
@@ -262,8 +374,8 @@ python scripts/3_train.py
 | `frontend/` | Next.js 15 + React 19 labeling UI |
 | `scripts/` | Python utilities (frame extraction, dataset split, training) |
 | `dataset/` | Your images, labels, and training configuration |
-| `install.sh` | One-shot setup script (creates venvs, installs deps) |
-| `start.sh` | Starts backend + frontend together |
+| `install.sh` / `install.bat` | One-shot setup script (creates venvs, installs deps) |
+| `start.sh` / `start.bat` | Starts backend + frontend together |
 | `requirements-train.txt` | PyTorch + Ultralytics for training |
 
 ---
@@ -298,16 +410,16 @@ Environment variables:
 |---------|----------|
 | **"Python 3 not found"** | Install Python 3.10+ from https://python.org |
 | **"Node.js not found"** | Install Node 18+ from https://nodejs.org |
-| **"OpenCV not found"** when extracting frames | Run `.venv/bin/pip install opencv-python` |
+| **OpenCV not found when extracting frames** | **Linux/macOS:** `.venv/bin/pip install opencv-python` **Windows:** `.venv\Scripts\pip install opencv-python` |
 
 ### Running
 
 | Problem | Solution |
 |---------|----------|
-| **"Backend venv not found"** when running `start.sh` | Run `bash install.sh` first |
+| **"Backend venv not found"** when running `start.sh` / `start.bat` | **Linux/macOS:** Run `bash install.sh` **Windows:** Run `install.bat` |
 | **"API connection failed"** | Check `.backend.log` for errors. Ensure port 8000 is not in use. |
 | **Frontend shows "Cannot reach API"** | Wait 10 seconds for both servers to fully start. Check `.frontend.log` and `.backend.log`. |
-| **Port 8000 or 3000 already in use** | Kill the process using that port or edit `start.sh` to use different ports. |
+| **Port 8000 or 3000 already in use** | **Linux/macOS:** Kill the process or edit `start.sh` to use different ports **Windows:** Change ports in `start.bat` |
 
 ### Labeling
 
@@ -321,9 +433,9 @@ Environment variables:
 
 | Problem | Solution |
 |---------|----------|
-| **"No GPU detected"** | Ensure PyTorch can detect your GPU: `python -c "import torch; print(torch.cuda.is_available())"` |
+| **"No GPU detected"** | **Linux/macOS:** `source .venv-train/bin/activate; python -c "import torch; print(torch.cuda.is_available())"` **Windows:** `.venv-train\Scripts\activate` then `python -c "import torch; print(torch.cuda.is_available())"` |
 | **"CUDA out of memory"** | Reduce `BATCH` size in `scripts/3_train.py` (try 4 or 2). |
-| **"No module named 'cv2'"** during training | Run `.venv-train/bin/pip install opencv-python` |
+| **"No module named 'cv2'"** during training | **Linux/macOS:** `.venv-train/bin/pip install opencv-python` **Windows:** `.venv-train\Scripts\pip install opencv-python` |
 | **Training is very slow** | Check GPU usage with `nvidia-smi`. If GPU usage is low, set `WORKERS=0` or reduce `BATCH`. |
 
 ---
@@ -341,7 +453,9 @@ Environment variables:
 
 ## Environment Setup (Manual Alternative)
 
-If you prefer not to use `install.sh`, you can set up manually:
+If you prefer not to use `install.sh` or `install.bat`, you can set up manually:
+
+**On Linux / macOS:**
 
 ```bash
 # Create backend venv
@@ -367,6 +481,35 @@ test: images/test
 names:
   0: object
 EOF
+```
+
+**On Windows:**
+
+```cmd
+REM Create backend venv
+python -m venv .venv
+.venv\Scripts\pip install -r backend\requirements.txt
+.venv\Scripts\pip install opencv-python
+
+REM Create training venv
+python -m venv .venv-train
+.venv-train\Scripts\pip install -r requirements-train.txt
+
+REM Install frontend
+cd frontend && npm install && cd ..
+
+REM Create dataset structure
+mkdir dataset\images\train
+mkdir dataset\images\val
+mkdir dataset\images\test
+mkdir dataset\labels\train
+mkdir dataset\labels\val
+mkdir dataset\labels\test
+mkdir dataset\videos
+
+echo object > dataset\classes.txt
+
+REM Create data.yaml (use notepad or your editor)
 ```
 
 ---
