@@ -1,19 +1,30 @@
 import type { Metadata } from "next";
+import type { ReactNode } from "react";
+import { IBM_Plex_Mono, Sora } from "next/font/google";
 import "./globals.css";
 
+const sora = Sora({
+  subsets: ["latin"],
+  variable: "--font-ui",
+  display: "swap"
+});
+
+const ibmPlexMono = IBM_Plex_Mono({
+  subsets: ["latin"],
+  variable: "--font-mono",
+  weight: ["400", "500", "600"],
+  display: "swap"
+});
+
 export const metadata: Metadata = {
-  title: "omni-label-local",
-  description: "Simple object detection labeling and training",
+  title: "Omni-Label Local",
+  description: "Local image labeling tool for YOLO training"
 };
 
-export default function RootLayout({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
+export default function RootLayout({ children }: { children: ReactNode }) {
   return (
     <html lang="en">
-      <body>{children}</body>
+      <body className={`${sora.variable} ${ibmPlexMono.variable}`}>{children}</body>
     </html>
   );
 }

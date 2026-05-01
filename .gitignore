@@ -1,42 +1,57 @@
+# Python venvs
+.venv/
+.venv-train/
 __pycache__/
-*.py[cod]
-*$py.class
-*.so
-.Python
-env/
-venv/
-ENV/
-.venv
-
-node_modules/
-.next/
-build/
-dist/
+*.pyc
+*.pyo
 *.egg-info/
+.eggs/
+dist/
+build/
 
-ml/datasets/images/
-ml/datasets/labels/
-ml/artifacts/
-.temp/
+# Training outputs
+runs/
 
-.env
-.env.local
-*.log
+# Next.js
+frontend/.next/
+frontend/node_modules/
+frontend/out/
 
+# Logs (from start.sh)
+.backend.log
+.frontend.log
+.backend.pid
+.frontend.pid
+
+# Dataset content (keep only structure, not images/labels)
+dataset/images/train/*.jpg
+dataset/images/train/*.jpeg
+dataset/images/train/*.png
+dataset/images/train/*.bmp
+dataset/images/train/*.tif
+dataset/images/train/*.tiff
+dataset/images/val/*.jpg
+dataset/images/val/*.jpeg
+dataset/images/val/*.png
+dataset/images/val/*.bmp
+dataset/images/val/*.tif
+dataset/images/val/*.tiff
+dataset/images/test/*.jpg
+dataset/images/test/*.jpeg
+dataset/images/test/*.png
+dataset/images/test/*.bmp
+dataset/images/test/*.tif
+dataset/images/test/*.tiff
+dataset/videos/*.mp4
+dataset/videos/*.mov
+dataset/videos/*.avi
+dataset/videos/*.mkv
+dataset/videos/*.m4v
+dataset/videos/*.webm
+dataset/labels/train/*.txt
+dataset/labels/val/*.txt
+dataset/labels/test/*.txt
+
+# OS
 .DS_Store
-.cursor/
-.vscode/
-.idea/
-
-# ML artifacts
-*.pt
-*.pth
-*.onnx
-*.tflite
-
-# Optional Next.js cache
-.next
-out
-
-# Optional output
-coverage
+Thumbs.db

@@ -1,305 +1,179 @@
-# 🎯 omni-label-local
+# omni-label-local
 
-**Train your own custom object detection AI model in minutes!**
+A self-contained image labeling tool that lets you clone, install, label, and train a YOLOv11 model — no cloud, no accounts, no complexity.
 
-This is a simple tool that lets you:
-- ✅ Upload videos or images
-- ✅ Automatically extract frames from videos
-- ✅ Label objects in your images with a web interface
-- ✅ Split data into training/validation/test sets
-- ✅ Train a powerful YOLOv11 medium AI model
+## Prerequisites
 
-Perfect for school projects, science fairs, and learning about machine learning!
-
----
-
-## 📋 Prerequisites
-
-Before you start, make sure you have:
-
-1. **Python 3.10+** - Download from [python.org](https://www.python.org/downloads/)
-2. **Git** - Download from [git-scm.com](https://git-scm.com/)
-3. **Node.js 18+** (Optional, for Docker setup) - Download from [nodejs.org](https://nodejs.org/)
-4. **~5-10 GB of free disk space**
-
-### For GPU Training (Recommended)
-If you have an NVIDIA GPU, install CUDA for 10x faster training:
-```bash
-pip uninstall -y torch torchvision
-pip install torch torchvision --index-url https://download.pytorch.org/whl/cu124
-```
+| Tool | Minimum version | Download |
+|------|----------------|---------|
+| Python | 3.10+ | https://python.org |
+| Node.js | 18+ | https://nodejs.org |
+| Git | any | https://git-scm.com |
 
 ---
 
-## 🚀 Quick Start (5 Minutes)
+## Full pipeline
 
-### 1️⃣ Clone the Repository
+### 1. Clone and install
+
 ```bash
-cd ~/Repos/Projects
-git clone <your-repo-url> omni-label-local
+git clone <repo-url> omni-label-local
 cd omni-label-local
+bash install.sh
 ```
 
-### 2️⃣ Install Python Dependencies
-```bash
-pip install -r requirements.txt
-```
+`install.sh` creates two Python virtual environments and installs frontend packages:
 
-### 3️⃣ Install Frontend Dependencies
-```bash
-cd frontend
-npm install
-cd ..
-```
-
-### 4️⃣ Start the Backend Server
-Open a terminal and run:
-```bash
-python -m uvicorn backend.main:app --reload
-```
-
-You should see:
-```
-INFO:     Uvicorn running on http://127.0.0.1:8000
-```
-
-### 5️⃣ Start the Frontend
-Open another terminal and run:
-```bash
-cd frontend
-npm run dev
-```
-
-You should see:
-```
-> Local:        http://localhost:3000
-```
-
-### 6️⃣ Open Your Browser
-Go to: **http://localhost:3000**
+| Venv | Purpose |
+|------|---------|
+| `.venv/` | FastAPI backend |
+| `.venv-train/` | PyTorch + Ultralytics (for training) |
 
 ---
 
-## 📖 Step-by-Step Workflow
+### 2. Add your raw data
 
-### Step 1: Upload Your Data 📹
-You can upload videos or images:
+**Option A — drop images directly:**
 
-**Option A: Upload Videos**
-- Click "📹 Choose Videos"
-- Select MP4, MOV, AVI, or MKV files
-- Videos are automatically converted to image frames
-- Default: 50 frames per video
-
-**Option B: Upload Images Directly**
-- Click "🖼️ Choose Images"
-- Select JPG, PNG, BMP, or TIFF files
-- Add as many as you want!
-
-**You can do both!** Mix videos and images for maximum flexibility.
-
-### Step 2: Split Your Dataset 📊
-Click "Next: Split Dataset" to automatically divide your images into:
-- **Train (70%)** - Used to train the model
-- **Validation (20%)** - Used to check if training is working
-- **Test (10%)** - Used to test the final model
-
-### Step 3: Label Your Images 🏷️
-1. Select which set to label: Train, Validation, or Test
-2. For each image:
-   - **Click your class** (e.g., "cat", "dog", "person")
-   - **Draw a box** around the object by clicking and dragging
-   - Repeat for all objects in the image
-   - Click "← Previous" or "Next →" to move between images
-3. Labels are **automatically saved** as you navigate
-
-**Keyboard Shortcuts:**
-- Press "A" or Left Arrow: Previous image
-- Press "D" or Right Arrow: Next image
-
-### Step 4: Train Your Model 🤖
-Once you've labeled enough images:
-
-1. Click "Next: Train Model"
-2. Review your dataset statistics
-3. Copy the training command:
-
-```bash
-python ml/scripts/train_yolo11m.py --epochs 150 --batch 16 --imgsz 640
+```
+dataset/images/train/   ← put unlabeled JPGs / PNGs here
 ```
 
-4. Run it in a terminal from the repo root
-5. Watch your model train! This takes 5-60 minutes depending on:
-   - Number of images you have
-   - Whether you're using GPU or CPU
-   - How many epochs you set
+Then skip to step 4.
 
-**Example output:**
+**Option B — drop videos (and extract frames):**
+
 ```
-[DONE] Total frames written: 245
-✓ Class check OK: nc=3
-✓ Training imgsz: 640
-Starting training: YOLOv11 medium
-...
-✓ Training complete!
-✓ Model saved to: ml/artifacts/runs/detect/yolo11m_train
+dataset/videos/         ← put .mp4 / .mov / .avi files here
 ```
 
 ---
 
-## 🎮 Training Parameters Explained
-
-When running the training script, you can customize these options:
+### 3. Extract frames from videos
 
 ```bash
-python ml/scripts/train_yolo11m.py \
-  --epochs 150          # How many times to train (default: 150) - more = better but slower
-  --batch 16            # How many images to process at once (default: 16)
-  --imgsz 640           # Image resolution (default: 640) - larger = more detail but slower
-  --patience 40         # Stop early if no improvement for N epochs (default: 40)
-  --cpu                 # Use CPU instead of GPU
-  --name my_model       # Custom name for your model
+# 50 frames per video (default)
+.venv/bin/python scripts/1_extract_frames.py
+
+# Custom frame count
+.venv/bin/python scripts/1_extract_frames.py --frames-per-video 100
+
+# Single video
+.venv/bin/python scripts/1_extract_frames.py --video dataset/videos/myvid.mp4 --frames-per-video 200
 ```
 
-**Quick presets:**
-- **Fast training:** `--epochs 50 --batch 32 --imgsz 320`
-- **Balanced:** `--epochs 150 --batch 16 --imgsz 640` (default)
-- **High accuracy:** `--epochs 300 --batch 8 --imgsz 1280` (slow!)
+Frames are saved to `dataset/images/train/`.
 
 ---
 
-## 📍 Finding Your Trained Model
+### 4. Split into train / val / test
 
-After training completes, your model is saved at:
-
-```
-ml/artifacts/runs/detect/yolo11m_train/weights/best.pt
-```
-
-This is your AI model! You can:
-- Use it for inference on new images
-- Share it with friends
-- Deploy it to your Raspberry Pi
-- Fine-tune it with more data
-
----
-
-## ⚙️ Alternative: Run with Docker
-
-If you have Docker installed, you can run everything in containers:
+Randomly distributes all images 70 % train · 20 % val · 10 % test.
 
 ```bash
-docker-compose up
+.venv/bin/python scripts/2_split_dataset.py
 ```
 
-Then open: **http://localhost:3000**
+Run this **once** before you start labeling. It is safe to re-run — images already in a split folder are left in place.
 
 ---
 
-## 🆘 Troubleshooting
+### 5. Label images
 
-### Problem: "No module named 'torch'"
-**Solution:** Reinstall dependencies
+Start the backend and frontend:
+
 ```bash
-pip install -r requirements.txt
+bash start.sh
 ```
 
-### Problem: "Port 8000 is already in use"
-**Solution:** The backend is already running. Use a different port:
+Then open **http://localhost:3000** in your browser.
+
+**Labeling workflow:**
+
+1. The labeler opens to the `train` split automatically.
+2. Click and drag on the canvas to draw bounding boxes.
+3. Add class names in the right rail (they are saved to `dataset/classes.txt`).
+4. Use **A / D** or arrow keys to move between images.
+5. Labels are auto-saved as you go to `dataset/labels/<split>/`.
+6. Switch splits with the dropdown in the right rail.
+
+**Keyboard shortcuts:**
+
+| Key | Action |
+|-----|--------|
+| `A` / `←` | Previous image |
+| `D` / `→` | Next image |
+| `0`–`9` | Select class |
+| `Ctrl+Z` | Undo |
+| `Ctrl+Shift+Z` | Redo |
+| `Ctrl+C` | Copy selected box |
+| `Ctrl+V` | Paste box |
+| `R` | Toggle resize mode |
+| `Delete` | Remove selected box |
+
+Press **Ctrl+C** in the terminal to stop both servers.
+
+---
+
+### 6. Train
+
+Edit the config block at the top of `scripts/3_train.py`:
+
+```python
+MODEL    = "yolo11m.pt"  # yolo11n / yolo11s / yolo11m / yolo11l / yolo11x
+EPOCHS   = 100
+BATCH    = 8             # reduce to 4 if GPU runs out of memory
+IMGSZ    = 640
+PATIENCE = 30
+DEVICE   = None          # None = auto-detect GPU, or "cpu"
+RUN_NAME = "run1"
+```
+
+Then run:
+
 ```bash
-python -m uvicorn backend.main:app --port 8001 --reload
+source .venv-train/bin/activate      # Linux / macOS
+# .venv-train\Scripts\activate       # Windows
+
+python scripts/3_train.py
 ```
 
-### Problem: "CUDA out of memory" during training
-**Solution:** Either use CPU or reduce batch size:
+Best weights are saved to `runs/<RUN_NAME>/weights/best.pt`.
+
+---
+
+## Dataset folder structure
+
+```
+dataset/
+├── videos/              ← drop raw videos here
+├── images/
+│   ├── train/           ← training images
+│   ├── val/             ← validation images
+│   └── test/            ← test images
+├── labels/
+│   ├── train/           ← YOLO .txt label files (auto-generated by labeler)
+│   ├── val/
+│   └── test/
+├── classes.txt          ← one class name per line (managed by labeler)
+└── data.yaml            ← YOLO training config (read by training script)
+```
+
+---
+
+## Troubleshooting
+
+**"Cannot reach backend API"** — run `bash start.sh` first. Check `.backend.log` for errors.
+
+**Frontend shows blank** — wait a few seconds for Next.js to compile, then refresh.
+
+**Dataset not loading in labeler** — paste the absolute path to the `dataset/` folder in the right rail and click "Set dataset path", then reload the page.
+
+**GPU out of memory** — reduce `BATCH` in `scripts/3_train.py` (try 4 or 2).
+
+**Training is very slow** — make sure PyTorch detects your GPU. Check with:
+
 ```bash
-python ml/scripts/train_yolo11m.py --batch 8 --cpu
+source .venv-train/bin/activate
+python -c "import torch; print(torch.cuda.is_available(), torch.cuda.get_device_name(0) if torch.cuda.is_available() else 'no GPU')"
 ```
-
-### Problem: "ModuleNotFoundError: No module named 'cv2'"
-**Solution:** Install OpenCV
-```bash
-pip install opencv-python
-```
-
-### Problem: "Port 3000 is already in use"
-**Solution:** Kill the process on that port or use a different one:
-```bash
-cd frontend
-npm run dev -- -p 3001
-```
-
-### Problem: Videos won't upload
-**Solution:** Make sure they're in a supported format: MP4, MOV, AVI, MKV, M4V, or WEBM
-
-### Problem: Training is very slow
-**Solution:** Make sure you have CUDA installed for GPU training. CPU training is much slower:
-```bash
-python ml/scripts/train_yolo11m.py --cpu  # This will be SLOW
-```
-
----
-
-## 📚 What's Happening Behind the Scenes?
-
-Here's what the tool does:
-
-1. **Video → Images:** Uses OpenCV to extract frames
-2. **Splitting:** Randomly shuffles and divides images 70/20/10
-3. **Labeling:** Saves bounding boxes in YOLO format (one `.txt` file per image)
-4. **Training:** Uses YOLOv11 medium from Ultralytics to learn object detection
-5. **Output:** Saves a trained model as `best.pt`
-
----
-
-## 🎓 Learning Resources
-
-Want to learn more about what's happening?
-
-- **YOLO Object Detection:** https://docs.ultralytics.com/
-- **Computer Vision:** https://www.computervision.org/
-- **Machine Learning Basics:** https://www.fast.ai/
-- **Python for ML:** https://realpython.com/
-
----
-
-## 💡 Project Ideas
-
-Here are some cool things you can detect:
-
-- 🐕 **Pet Detection:** Train on cats, dogs, birds
-- 🚗 **Vehicle Detection:** Cars, trucks, motorcycles
-- 🌳 **Plant Detection:** Different plant species
-- 👕 **Clothing:** Different types of clothing
-- 🍎 **Produce:** Fruits and vegetables
-- ⚽ **Sports:** Sports balls, equipment
-- 🎮 **Gaming:** In-game objects
-
----
-
-## 📧 Questions or Issues?
-
-- Check the **Troubleshooting** section above
-- Create an issue on GitHub
-- Ask your teacher or classmates!
-
----
-
-## 📄 License
-
-This project is open source and free to use for educational purposes.
-
----
-
-## 🚀 Next Steps
-
-1. ✅ Get some data (videos or images)
-2. ✅ Upload and label it
-3. ✅ Train your model
-4. ✅ Use it for something awesome!
-
-**Happy learning! 🎉**
-
----
-
-*Built with ❤️ for learning and science fairs*
