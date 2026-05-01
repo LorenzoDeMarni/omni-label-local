@@ -11,6 +11,9 @@ build/
 
 # Training outputs
 runs/
+yolo11m.pt
+yolo26n.pt
+*.pt
 
 # Next.js
 frontend/.next/
