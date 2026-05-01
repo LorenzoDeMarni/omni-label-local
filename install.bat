@@ -101,7 +101,13 @@ if not exist ".venv-train" (
 echo [INFO]  Installing training dependencies (ultralytics, torch, ...) ...
 echo [INFO]  This may take several minutes the first time (large downloads).
 call .venv-train\Scripts\pip install --quiet --upgrade pip
-call .venv-train\Scripts\pip install --quiet -r requirements-train.txt
+call .venv-train\Scripts\pip install -r requirements-train.txt
+.venv-train\Scripts\python -c "import torch; import ultralytics" >nul 2>nul
+if %errorlevel% neq 0 (
+  echo [ERROR] Training dependencies failed to install. Check the output above for errors.
+  echo [ERROR] Re-run: .venv-train\Scripts\pip install -r requirements-train.txt
+  exit /b 1
+)
 echo [INFO]  Training dependencies installed.
 
 REM ── 3. Frontend npm install ───────────────────────────────────────────────────

@@ -107,7 +107,12 @@ fi
 info "Installing training dependencies (ultralytics, torch, ...) ..."
 info "This may take several minutes the first time (large downloads)."
 "$TRAIN_VENV/bin/pip" install --quiet --upgrade pip
-"$TRAIN_VENV/bin/pip" install --quiet -r "$REPO_ROOT/requirements-train.txt"
+"$TRAIN_VENV/bin/pip" install -r "$REPO_ROOT/requirements-train.txt"
+if ! "$TRAIN_VENV/bin/python" -c "import torch; import ultralytics" 2>/dev/null; then
+  error "Training dependencies failed to install. Check the output above for errors."
+  error "Re-run: .venv-train/bin/pip install -r requirements-train.txt"
+  exit 1
+fi
 info "Training dependencies installed."
 
 # ── 3. Frontend npm install ───────────────────────────────────────────────────
