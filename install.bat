@@ -84,7 +84,7 @@ if not exist ".venv" (
   echo [INFO]  Backend venv already exists (.venv), skipping creation.
 )
 
-echo [INFO]  Installing backend dependencies (fastapi, uvicorn, ...) ...
+echo [INFO]  Installing backend dependencies (fastapi, uvicorn, opencv, ...) ...
 call .venv\Scripts\pip install --quiet --upgrade pip
 call .venv\Scripts\pip install --quiet -r backend\requirements.txt
 echo [INFO]  Backend dependencies installed.

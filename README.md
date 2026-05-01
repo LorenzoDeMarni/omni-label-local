@@ -44,7 +44,7 @@ The `install.sh` (macOS/Linux) and `install.bat` (Windows) scripts will automati
 | **React** | JavaScript UI library | Powers the interactive labeling interface |
 | **PyTorch** | Deep learning framework | Required for training the YOLO model |
 | **Ultralytics** | YOLO library | Contains the YOLOv11 training code |
-| **OpenCV** | Computer vision library | Used for extracting frames from videos (installed on-demand) |
+| **OpenCV** | Computer vision library | Used for extracting frames from videos |
 
 **Total download size:** ~2-3 GB (mostly PyTorch on first training run)  
 **Installation time:** 5-15 minutes (depending on your internet speed)
@@ -91,7 +91,7 @@ Both scripts set up two Python virtual environments and install frontend package
 
 | Venv | Purpose |
 |------|---------|
-| `.venv/` | FastAPI backend + frame extraction (requires OpenCV) |
+| `.venv/` | FastAPI backend + frame extraction |
 | `.venv-train/` | PyTorch + Ultralytics for model training |
 
 The install script also creates the `dataset/` folder structure and default `classes.txt` / `data.yaml` files.
@@ -153,20 +153,6 @@ REM Extract from a single video
 ```
 
 Extracted frames are saved to `dataset/images/train/`.
-
-**Note:** The first time you run frame extraction, you may need to install OpenCV:
-
-**On Linux / macOS:**
-
-```bash
-.venv/bin/pip install opencv-python
-```
-
-**On Windows:**
-
-```cmd
-.venv\Scripts\pip install opencv-python
-```
 
 ---
 
@@ -511,7 +497,6 @@ If you prefer not to use `install.sh` or `install.bat`, you can set up manually:
 # Create backend venv
 python3 -m venv .venv
 .venv/bin/pip install -r backend/requirements.txt
-.venv/bin/pip install opencv-python  # needed for frame extraction
 
 # Create training venv
 python3 -m venv .venv-train
@@ -539,7 +524,6 @@ EOF
 REM Create backend venv
 python -m venv .venv
 .venv\Scripts\pip install -r backend\requirements.txt
-.venv\Scripts\pip install opencv-python
 
 REM Create training venv
 python -m venv .venv-train

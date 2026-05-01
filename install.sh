@@ -88,7 +88,7 @@ else
   info "Backend venv already exists (.venv), skipping creation."
 fi
 
-info "Installing backend dependencies (fastapi, uvicorn, ...) ..."
+info "Installing backend dependencies (fastapi, uvicorn, opencv, ...) ..."
 "$BACKEND_VENV/bin/pip" install --quiet --upgrade pip
 "$BACKEND_VENV/bin/pip" install --quiet -r "$REPO_ROOT/backend/requirements.txt"
 info "Backend dependencies installed."
