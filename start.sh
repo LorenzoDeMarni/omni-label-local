@@ -35,6 +35,20 @@ if [ ! -d "$REPO_ROOT/frontend/node_modules" ]; then
   exit 1
 fi
 
+# ── Free ports if occupied ────────────────────────────────────────────────────
+
+if fuser 8000/tcp > /dev/null 2>&1; then
+  warn "Port 8000 is in use — killing existing process ..."
+  fuser -k 8000/tcp || true
+  sleep 0.5
+fi
+
+if fuser 3000/tcp > /dev/null 2>&1; then
+  warn "Port 3000 is in use — killing existing process ..."
+  fuser -k 3000/tcp || true
+  sleep 0.5
+fi
+
 # ── Export dataset env var ────────────────────────────────────────────────────
 
 export OMNI_LABEL_DATASET="$REPO_ROOT/dataset"
