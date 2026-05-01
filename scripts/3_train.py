@@ -12,22 +12,6 @@ Trained weights will be saved to runs/<run_name>/weights/best.pt
 """
 from __future__ import annotations
 
-# Guard against OS-installed matplotlib compiled against numpy 1.x (common on
-# Ubuntu/Debian when numpy 2.x is installed via pip). Inject a lightweight
-# stub BEFORE ultralytics is loaded so the font-check helper doesn't crash.
-import sys as _sys, types as _types
-
-if "matplotlib" not in _sys.modules:
-    _stub = _types.ModuleType("matplotlib")
-    _fm = _types.ModuleType("matplotlib.font_manager")
-    _fm.findfont = lambda *a, **kw: ""  # type: ignore[attr-defined]
-    _fm.findSystemFonts = lambda *a, **kw: []  # type: ignore[attr-defined]
-    _fm.FontProperties = object  # type: ignore[attr-defined]
-    _fm.FontManager = object  # type: ignore[attr-defined]
-    _stub.font_manager = _fm  # type: ignore[attr-defined]
-    _sys.modules["matplotlib"] = _stub
-    _sys.modules["matplotlib.font_manager"] = _fm
-
 # ── Training config — edit these before running ──────────────────────────────
 MODEL    = "yolo11m.pt"   # model size: yolo11n (nano), yolo11s, yolo11m (medium), yolo11l, yolo11x
 EPOCHS   = 100            # number of training epochs
