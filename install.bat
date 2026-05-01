@@ -27,7 +27,12 @@ REM ── Check Python ──────────────────�
 where python >nul 2>nul
 if %errorlevel% neq 0 (
   echo [ERROR] Python is not installed or not on PATH.
-  echo         Install it from https://python.org/
+  echo.
+  echo   Install Python 3.10+ from: https://python.org
+  echo.
+  echo   IMPORTANT: During installation, check "Add Python to PATH"
+  echo.
+  echo   After installation, restart your terminal and run this script again.
   exit /b 1
 )
 
@@ -37,6 +42,9 @@ echo [INFO]  Using !PY_VERSION!
 python -c "import sys; sys.exit(0 if sys.version_info >= (3, 10) else 1)"
 if %errorlevel% neq 0 (
   echo [ERROR] Python 3.10+ is required.
+  echo.
+  echo   Upgrade Python from: https://python.org
+  echo   Then restart your terminal and run this script again.
   exit /b 1
 )
 
@@ -45,13 +53,21 @@ REM ── Check Node / npm ─────────────────�
 where node >nul 2>nul
 if %errorlevel% neq 0 (
   echo [ERROR] Node.js is not installed or not on PATH.
-  echo         Install it from https://nodejs.org/
+  echo.
+  echo   Install Node.js 18+ from: https://nodejs.org
+  echo.
+  echo   IMPORTANT: During installation, allow it to add Node to PATH
+  echo.
+  echo   After installation, restart your terminal and run this script again.
   exit /b 1
 )
 
 where npm >nul 2>nul
 if %errorlevel% neq 0 (
   echo [ERROR] npm is not installed or not on PATH.
+  echo.
+  echo   npm should come with Node.js. If missing, reinstall from: https://nodejs.org
+  echo   Make sure to restart your terminal after installing.
   exit /b 1
 )
 

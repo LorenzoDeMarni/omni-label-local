@@ -10,6 +10,45 @@ A self-contained image labeling tool that lets you clone, install, label, and tr
 | Node.js | 18+ | https://nodejs.org |
 | Git | any | https://git-scm.com |
 
+### Installing Prerequisites (if you don't have them)
+
+**Python:**
+1. Visit https://python.org and download Python 3.10 or later
+2. **Important (Windows only):** During installation, check the box "Add Python to PATH"
+3. Verify: Open terminal/command prompt and run `python --version`
+
+**Node.js:**
+1. Visit https://nodejs.org and download the LTS (Long Term Support) version
+2. **Important:** During installation, allow it to add Node to PATH
+3. Verify: Open terminal/command prompt and run `node --version` and `npm --version`
+
+**Git:**
+1. Visit https://git-scm.com and download the installer
+2. Follow the default installation steps
+3. Verify: Open terminal/command prompt and run `git --version`
+
+Once all three are installed, you're ready to clone and install omni-label-local!
+
+---
+
+## What Gets Installed
+
+The `install.sh` (macOS/Linux) and `install.bat` (Windows) scripts will automatically download and install everything else you need:
+
+| Component | What it is | Why you need it |
+|-----------|-----------|-----------------|
+| **Virtual Environments (.venv, .venv-train)** | Isolated Python environments for this project | Prevents conflicts with other Python projects |
+| **FastAPI** | Web framework for the backend API | Powers the dataset API server |
+| **Uvicorn** | ASGI web server | Runs FastAPI in the background |
+| **Next.js** | React framework for the web UI | Builds the labeling interface |
+| **React** | JavaScript UI library | Powers the interactive labeling interface |
+| **PyTorch** | Deep learning framework | Required for training the YOLO model |
+| **Ultralytics** | YOLO library | Contains the YOLOv11 training code |
+| **OpenCV** | Computer vision library | Used for extracting frames from videos (installed on-demand) |
+
+**Total download size:** ~2-3 GB (mostly PyTorch on first training run)  
+**Installation time:** 5-15 minutes (depending on your internet speed)
+
 ---
 
 ## Platform Support
@@ -404,13 +443,24 @@ Environment variables:
 
 ## Common Issues & Solutions
 
-### Installation
+### Prerequisites Installation
 
 | Problem | Solution |
 |---------|----------|
-| **"Python 3 not found"** | Install Python 3.10+ from https://python.org |
-| **"Node.js not found"** | Install Node 18+ from https://nodejs.org |
-| **OpenCV not found when extracting frames** | **Linux/macOS:** `.venv/bin/pip install opencv-python` **Windows:** `.venv\Scripts\pip install opencv-python` |
+| **"Python not found" on Windows** | Python was not added to PATH during installation. Reinstall Python and **check "Add Python to PATH"** during setup. Restart your terminal after installing. |
+| **"Node.js not found" on Windows** | Node.js was not added to PATH. Reinstall from https://nodejs.org and allow PATH modification. Restart your terminal after installing. |
+| **"Python/Node command not found" after install** | Your terminal session was open during installation. **Close and reopen your terminal** to load the updated PATH. |
+| **"python3 --version" works but "python --version" doesn't** | Your system uses `python3` instead of `python`. That's fine! The install script will detect it automatically. |
+| **On macOS: Python/Node installed but not in PATH** | Install via Homebrew instead: `brew install python@3.11 node` (ensures PATH is set up correctly) |
+
+### Installation Script
+
+| Problem | Solution |
+|---------|----------|
+| **"Python 3 is not installed or not on PATH"** | Install Python 3.10+ from https://python.org. Restart your terminal. Then run the install script again. |
+| **"Node.js is not installed or not on PATH"** | Install Node.js 18+ from https://nodejs.org. Restart your terminal. Then run the install script again. |
+| **"pip: command not found"** | Python wasn't installed with pip. Reinstall Python from https://python.org and ensure pip is included. |
+| **"npm: command not found"** | npm should come with Node.js. Reinstall from https://nodejs.org. If still missing, your Node install was incomplete. |
 
 ### Running
 

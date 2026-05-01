@@ -32,6 +32,11 @@ elif command -v python &>/dev/null; then
   PYTHON=python
 else
   error "Python 3 is not installed or not on PATH."
+  echo ""
+  echo "  Install Python 3.10+ from: https://python.org"
+  echo ""
+  echo "  After installation, verify with: python3 --version"
+  echo "  Then run this script again."
   exit 1
 fi
 
@@ -41,6 +46,9 @@ info "Using Python $PY_MAJOR.$PY_MINOR ($PYTHON)"
 
 if [ "$PY_MAJOR" -lt 3 ] || { [ "$PY_MAJOR" -eq 3 ] && [ "$PY_MINOR" -lt 10 ]; }; then
   error "Python 3.10+ is required (found $PY_MAJOR.$PY_MINOR)."
+  echo ""
+  echo "  Update Python from: https://python.org"
+  echo "  Then run this script again."
   exit 1
 fi
 
@@ -48,12 +56,22 @@ fi
 
 if ! command -v node &>/dev/null; then
   error "Node.js is not installed or not on PATH."
-  error "Install it from https://nodejs.org/ (v18+ recommended)."
+  echo ""
+  echo "  Install Node.js 18+ from: https://nodejs.org"
+  echo ""
+  echo "  After installation, verify with: node --version"
+  echo "  Then run this script again."
   exit 1
 fi
 
 if ! command -v npm &>/dev/null; then
   error "npm is not installed or not on PATH."
+  echo ""
+  echo "  npm should come with Node.js. Verify:"
+  echo "    node --version"
+  echo "    npm --version"
+  echo ""
+  echo "  If npm is missing, reinstall Node.js from: https://nodejs.org"
   exit 1
 fi
 
