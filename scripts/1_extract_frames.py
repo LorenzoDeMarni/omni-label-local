@@ -126,7 +126,7 @@ def main() -> None:
     parser.add_argument(
         "--output-dir",
         type=Path,
-        default=REPO_ROOT / "dataset" / "images" / "train",
+        default=REPO_ROOT / "dataset" / "videos",
         help="Directory where extracted frames will be saved.",
     )
     parser.add_argument(
@@ -184,7 +184,7 @@ def main() -> None:
 
     print(f"\n[DONE] Total frames written: {total_written}")
     print(f"       Frames are in: {output_dir}")
-    print(f"\nNext step: python scripts/2_split_dataset.py")
+    print(f"\nNext step: .venv/bin/python scripts/2_split_dataset.py")
 
 
 if __name__ == "__main__":

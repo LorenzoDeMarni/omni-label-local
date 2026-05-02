@@ -1,11 +1,11 @@
 """
-Split images in dataset/images/train/ into train / val / test (70 / 20 / 10).
+Split extracted frames from dataset/videos/ into train / val / test (70 / 20 / 10).
 
-Groups frames by their source video and interleaves them across splits so
-each split gets frames from throughout every video — no temporal block bias.
+Frames are grouped by source video and interleaved across splits so each
+split gets frames from throughout every video — no temporal block bias.
 
-Re-run safe: images that already have a label file in labels/train/ are
-never moved, so adding a new video and re-running is always safe.
+Re-run safe: frames already moved out of dataset/videos/ are not seen again,
+so adding a new video, extracting frames, and re-running is always safe.
 
 Run from repo root:
     python scripts/2_split_dataset.py
@@ -28,15 +28,11 @@ _FRAME_RE = re.compile(r"^(.+)_frame_(\d{6})$")
 
 
 def list_images(directory: Path) -> List[Path]:
+    """Return only image files in directory (not videos or other files)."""
     files: List[Path] = []
     for ext in IMAGE_EXTENSIONS:
         files.extend(directory.glob(f"*{ext}"))
     return sorted(p for p in files if p.is_file())
-
-
-def has_label(image_path: Path, labels_dir: Path) -> bool:
-    """Return True if a YOLO label file already exists for this image."""
-    return (labels_dir / (image_path.stem + ".txt")).exists()
 
 
 def video_group_key(path: Path) -> str:
@@ -60,7 +56,7 @@ def interleave_split(
     Instead of putting the first 70% in train as a block, frames are spread
     evenly across splits throughout the video. For example with 10 frames:
     positions 2 and 7 go to val, position 5 goes to test, the rest to train.
-    This ensures each split sees frames from all parts of the video.
+    This ensures each split sees frames from all parts of every video.
     """
     n = len(frames)
     if n == 0:
@@ -114,42 +110,34 @@ def unique_dest_path(dest_dir: Path, filename: str) -> Path:
 
 
 def main() -> None:
-    images_root  = REPO_ROOT / "dataset" / "images"
-    labels_root  = REPO_ROOT / "dataset" / "labels"
-    train_dir    = images_root / "train"
-    val_dir      = images_root / "val"
-    test_dir     = images_root / "test"
-    train_labels = labels_root / "train"
+    videos_dir  = REPO_ROOT / "dataset" / "videos"
+    images_root = REPO_ROOT / "dataset" / "images"
+    train_dir   = images_root / "train"
+    val_dir     = images_root / "val"
+    test_dir    = images_root / "test"
+
+    if not videos_dir.exists():
+        raise SystemExit(
+            f"[ERROR] Videos directory not found: {videos_dir}\n"
+            "       Create it and drop your videos inside."
+        )
 
     for d in (train_dir, val_dir, test_dir):
         d.mkdir(parents=True, exist_ok=True)
 
-    # Only look at images in train/ — that's where the extract script puts them
-    all_train = list_images(train_dir)
-    if not all_train:
+    # Only pick up image files — video files (.mp4, .mkv, etc.) are left alone
+    pending = list_images(videos_dir)
+    if not pending:
         raise SystemExit(
-            f"[ERROR] No images found in: {train_dir}\n"
-            "       Extract frames first with:\n"
-            "       .venv/bin/python scripts/1_extract_frames.py"
+            f"[ERROR] No extracted frames found in: {videos_dir}\n"
+            "       Run first: .venv/bin/python scripts/1_extract_frames.py"
         )
 
-    print(f"[INFO] Found {len(all_train)} image(s) in {train_dir}")
+    print(f"[INFO] Found {len(pending)} frame(s) to split in {videos_dir}")
 
-    # Skip already-labeled images so re-runs never disturb labeled data
-    eligible = [p for p in all_train if not has_label(p, train_labels)]
-    skipped  = len(all_train) - len(eligible)
-    if skipped:
-        print(f"[INFO] Keeping {skipped} already-labeled image(s) in train/ (skipped).")
-    if not eligible:
-        print("[INFO] Nothing new to split — all images are already labeled.")
-        print(f"\nNext step: bash start.sh  (then open http://localhost:3000 to label)")
-        return
-
-    print(f"[INFO] Splitting {len(eligible)} unlabeled image(s) ...")
-
-    # Group by video source (frames from the same video share the same key)
+    # Group by video source
     groups: Dict[str, List[Path]] = defaultdict(list)
-    for p in eligible:
+    for p in pending:
         groups[video_group_key(p)].append(p)
 
     group_names = sorted(groups.keys())
@@ -167,8 +155,10 @@ def main() -> None:
             f"train={len(tr)}  val={len(vl)}  test={len(te)}"
         )
 
-        # Train frames stay in train/ — nothing to move
-        counts["train"] += len(tr)
+        for src in tr:
+            dest = unique_dest_path(train_dir, src.name)
+            shutil.move(str(src), str(dest))
+            counts["train"] += 1
 
         for src in vl:
             dest = unique_dest_path(val_dir, src.name)

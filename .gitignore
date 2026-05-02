@@ -51,6 +51,12 @@ dataset/videos/*.avi
 dataset/videos/*.mkv
 dataset/videos/*.m4v
 dataset/videos/*.webm
+dataset/videos/*.jpg
+dataset/videos/*.jpeg
+dataset/videos/*.png
+dataset/videos/*.bmp
+dataset/videos/*.tif
+dataset/videos/*.tiff
 dataset/labels/train/*.txt
 dataset/labels/val/*.txt
 dataset/labels/test/*.txt
