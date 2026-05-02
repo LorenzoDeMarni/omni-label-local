@@ -399,6 +399,28 @@ REM Best weights saved to: runs\run1\weights\best.pt
 
 ---
 
+## Backend API (Advanced)
+
+The backend runs on `http://localhost:8000` and provides a REST API for the frontend. Key endpoints:
+
+| Method | Endpoint | Purpose |
+|--------|----------|---------|
+| `GET` | `/healthz` | Health check (returns `{"status": "ok"}`) |
+| `GET` / `PUT` | `/api/v1/datasets/current/root` | Get/set dataset root path |
+| `POST` | `/api/v1/datasets/current/root/pick` | Open native folder picker |
+| `GET` / `PUT` | `/api/v1/datasets/current/classes` | Get/set class names |
+| `GET` | `/api/v1/datasets/current/splits/{split}/images` | List images in a split |
+| `GET` | `/api/v1/datasets/current/splits/{split}/images/{filename}` | Download image |
+| `GET` | `/api/v1/datasets/current/splits/{split}/labels/{stem}.txt` | Read label file |
+| `PUT` | `/api/v1/datasets/current/splits/{split}/labels/{stem}.txt` | Save/delete label |
+
+Environment variables:
+
+- `OMNI_LABEL_DATASET`: Absolute path to your dataset root. If not set, defaults to `<repo>/dataset/`.
+- `NEXT_PUBLIC_API_BASE`: Frontend API base URL (default: `http://localhost:8000/api/v1`).
+
+---
+
 ## Common Issues & Solutions
 
 ### Prerequisites Installation
