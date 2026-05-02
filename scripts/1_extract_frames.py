@@ -1,13 +1,12 @@
 """
-Extract frames from videos into dataset/images/train.
+Extract frames from videos into dataset/videos/ at a given frames-per-second rate.
 
 Usage examples (run from repo root):
     python scripts/1_extract_frames.py
-    python scripts/1_extract_frames.py --frames-per-video 100
-    python scripts/1_extract_frames.py --video dataset/videos/myvideo.mp4 --frames-per-video 200
+    python scripts/1_extract_frames.py --fps 2
+    python scripts/1_extract_frames.py --video dataset/videos/myvideo.mp4 --fps 10
 """
 import argparse
-import sys
 from pathlib import Path
 from typing import List
 
@@ -24,6 +23,8 @@ except ImportError as exc:
 REPO_ROOT = Path(__file__).resolve().parent.parent
 VIDEO_EXTENSIONS = (".mp4", ".mov", ".avi", ".mkv", ".m4v", ".webm")
 
+DEFAULT_FPS = 5
+
 
 def find_videos(input_dir: Path) -> List[Path]:
     videos: List[Path] = []
@@ -33,20 +34,10 @@ def find_videos(input_dir: Path) -> List[Path]:
     return videos
 
 
-def compute_frame_indices(total_frames: int, frames_per_video: int) -> List[int]:
-    if total_frames <= 0:
-        return []
-    if frames_per_video <= 0 or frames_per_video >= total_frames:
-        return list(range(total_frames))
-    step = total_frames / float(frames_per_video)
-    indices = [min(int(round(i * step)), total_frames - 1) for i in range(frames_per_video)]
-    return sorted(set(indices))
-
-
 def extract_frames_from_video(
     video_path: Path,
     output_dir: Path,
-    frames_per_video: int,
+    desired_fps: float,
     image_format: str = "jpg",
 ) -> int:
     cap = cv2.VideoCapture(str(video_path))
@@ -54,52 +45,35 @@ def extract_frames_from_video(
         print(f"[WARN] Could not open video: {video_path}")
         return 0
 
-    frame_count = int(cap.get(cv2.CAP_PROP_FRAME_COUNT)) or 0
+    video_fps = cap.get(cv2.CAP_PROP_FPS)
+    if not video_fps or video_fps <= 0:
+        print(f"[WARN] Could not read FPS for {video_path.name} — extracting all frames.")
+        video_fps = desired_fps  # step = 1, extract every frame
 
-    if frame_count <= 0:
-        manual_count = 0
-        while True:
-            ret, _ = cap.read()
-            if not ret:
-                break
-            manual_count += 1
-        cap.release()
-
-        if manual_count <= 0:
-            print(f"[WARN] Video has zero frames: {video_path}")
-            return 0
-
-        cap = cv2.VideoCapture(str(video_path))
-        if not cap.isOpened():
-            print(f"[WARN] Could not re-open video: {video_path}")
-            return 0
-        frame_count = manual_count
-
-    indices = compute_frame_indices(frame_count, frames_per_video)
-    if not indices:
-        cap.release()
-        return 0
+    # How many source frames to skip between each extracted frame.
+    # e.g. 30fps video at 5fps desired → extract every 6th frame.
+    step = max(1.0, video_fps / desired_fps)
 
     output_dir.mkdir(parents=True, exist_ok=True)
 
-    indices_set = set(indices)
-    written = 0
-    current_index = 0
     stem = video_path.stem
     image_format = image_format.lower().lstrip(".")
+    written = 0
+    current_index = 0
+    next_extract = 0.0  # next source frame index to extract
 
     while True:
         ret, frame = cap.read()
         if not ret:
             break
-        if current_index in indices_set:
+        if current_index >= int(round(next_extract)):
             frame_name = f"{stem}_frame_{current_index:06d}.{image_format}"
             frame_path = output_dir / frame_name
-            ok = cv2.imwrite(str(frame_path), frame)
-            if ok:
+            if cv2.imwrite(str(frame_path), frame):
                 written += 1
             else:
                 print(f"[WARN] Failed to write frame: {frame_path}")
+            next_extract += step
         current_index += 1
 
     cap.release()
@@ -108,7 +82,7 @@ def extract_frames_from_video(
 
 def main() -> None:
     parser = argparse.ArgumentParser(
-        description="Extract frames from videos into dataset/images/train.",
+        description="Extract frames from videos at a given frames-per-second rate.",
         formatter_class=argparse.ArgumentDefaultsHelpFormatter,
     )
     parser.add_argument(
@@ -130,10 +104,10 @@ def main() -> None:
         help="Directory where extracted frames will be saved.",
     )
     parser.add_argument(
-        "--frames-per-video",
-        type=int,
-        default=50,
-        help="How many evenly-spaced frames to extract per video. 0 = all frames.",
+        "--fps",
+        type=float,
+        default=DEFAULT_FPS,
+        help="How many frames per second to extract. Use 0 to extract every frame.",
     )
     parser.add_argument(
         "--image-format",
@@ -144,7 +118,7 @@ def main() -> None:
     args = parser.parse_args()
 
     output_dir: Path = args.output_dir
-    frames_per_video: int = args.frames_per_video
+    desired_fps: float = args.fps if args.fps > 0 else float("inf")
     image_format: str = args.image_format
 
     if args.video is not None:
@@ -165,10 +139,8 @@ def main() -> None:
             raise SystemExit(1)
         print(f"[INFO] Found {len(videos)} video(s) under {input_dir}")
 
-    print(
-        f"[INFO] Extracting up to {frames_per_video if frames_per_video > 0 else 'ALL'} "
-        f"frame(s) per video into {output_dir}"
-    )
+    fps_label = f"{desired_fps:g}" if desired_fps != float("inf") else "ALL"
+    print(f"[INFO] Extracting at {fps_label} fps into {output_dir}")
 
     total_written = 0
     for vid in videos:
@@ -176,7 +148,7 @@ def main() -> None:
         written = extract_frames_from_video(
             video_path=vid,
             output_dir=output_dir,
-            frames_per_video=frames_per_video,
+            desired_fps=desired_fps,
             image_format=image_format,
         )
         print(f"       -> wrote {written} frame(s)")

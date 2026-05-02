@@ -117,27 +117,27 @@ Extracts evenly-spaced frames from every video and saves them alongside the vide
 **On Linux / macOS:**
 
 ```bash
-# Extract 50 frames per video (default)
+# Extract 5 frames per second (default)
 .venv/bin/python scripts/1_extract_frames.py
 
-# Extract custom frame count
-.venv/bin/python scripts/1_extract_frames.py --frames-per-video 100
+# Extract at a different rate
+.venv/bin/python scripts/1_extract_frames.py --fps 2
 
 # Extract from a single video
-.venv/bin/python scripts/1_extract_frames.py --video dataset/videos/myvideo.mp4 --frames-per-video 200
+.venv/bin/python scripts/1_extract_frames.py --video dataset/videos/myvideo.mp4 --fps 10
 ```
 
 **On Windows:**
 
 ```cmd
-REM Extract 50 frames per video (default)
+REM Extract 5 frames per second (default)
 .venv\Scripts\python scripts\1_extract_frames.py
 
-REM Extract custom frame count
-.venv\Scripts\python scripts\1_extract_frames.py --frames-per-video 100
+REM Extract at a different rate
+.venv\Scripts\python scripts\1_extract_frames.py --fps 2
 
 REM Extract from a single video
-.venv\Scripts\python scripts\1_extract_frames.py --video dataset\videos\myvideo.mp4 --frames-per-video 200
+.venv\Scripts\python scripts\1_extract_frames.py --video dataset\videos\myvideo.mp4 --fps 10
 ```
 
 After extraction, `dataset/videos/` contains both your original video files and the extracted frames together.
@@ -335,7 +335,7 @@ bash install.sh
 cp ~/my_videos/*.mp4 dataset/videos/
 
 # 3. Extract frames (saved alongside videos in dataset/videos/)
-.venv/bin/python scripts/1_extract_frames.py --frames-per-video 50
+.venv/bin/python scripts/1_extract_frames.py --fps 5
 
 # 4. Split frames into train/val/test
 .venv/bin/python scripts/2_split_dataset.py
@@ -365,7 +365,7 @@ REM 2. Drop videos into dataset\videos\
 copy C:\path\to\your\videos\*.mp4 dataset\videos\
 
 REM 3. Extract frames (saved alongside videos in dataset\videos\)
-.venv\Scripts\python scripts\1_extract_frames.py --frames-per-video 50
+.venv\Scripts\python scripts\1_extract_frames.py --fps 5
 
 REM 4. Split frames into train/val/test
 .venv\Scripts\python scripts\2_split_dataset.py
