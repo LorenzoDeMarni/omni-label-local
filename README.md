@@ -158,7 +158,9 @@ Extracted frames are saved to `dataset/images/train/`.
 
 ### 3. Split images into train / val / test
 
-Randomly distributes all images: 70% train · 20% validation · 10% test
+Distributes images 70% train · 20% val · 10% test, grouped by source video.
+
+Frames from the same video are interleaved across splits — every ~7th frame goes to val, every ~10th to test — so each split sees frames from throughout the whole video rather than a block at the end.
 
 **On Linux / macOS:**
 
@@ -172,7 +174,7 @@ Randomly distributes all images: 70% train · 20% validation · 10% test
 .venv\Scripts\python scripts\2_split_dataset.py
 ```
 
-**Important:** Run this **once** before you start heavy labeling. It's safe to re-run — images already in a split folder stay in place. However, if you add more images after splitting and labeling, labels may become out of sync with the new split.
+**Re-run safe:** Images that already have a label file are never moved. Add a new video, extract its frames, and re-run this script — only the new frames get split; your existing labels stay exactly where they are.
 
 ---
 
@@ -478,12 +480,13 @@ Environment variables:
 
 ## Tips & Best Practices
 
-1. **Start small:** Label 50-100 images first to verify the workflow before investing time in a large dataset.
-2. **Balanced classes:** Try to have roughly equal numbers of each class (e.g., 100 cars, 100 people, 100 bikes) for best training results.
-3. **Data quality:** Clear, well-lit images with visible objects produce better models.
-4. **Multiple training runs:** Try different model sizes (`yolo11n` is faster, `yolo11x` is more accurate) and hyperparameters to find what works for your data.
-5. **Save best weights:** After training, manually copy `runs/<RUN_NAME>/weights/best.pt` to a safe location for production use.
-6. **Re-export for inference:** If you trained locally, remember to export the `.pt` file to other formats (ONNX, TensorFlow) if deploying to other systems.
+1. **Record multiple videos:** The more separate recordings the better. Each video gets its frames interleaved across train/val/test, so even a single video works — but 3+ separate recordings (different sessions, angles, or lighting) give you a more honest evaluation.
+2. **Start small:** Label 50-100 images first to verify the workflow before investing time in a large dataset.
+3. **Balanced classes:** Try to have roughly equal numbers of each class (e.g., 100 cars, 100 people, 100 bikes) for best training results.
+4. **Data quality:** Clear, well-lit images with visible objects produce better models.
+5. **Multiple training runs:** Try different model sizes (`yolo11n` is faster, `yolo11x` is more accurate) and hyperparameters to find what works for your data.
+6. **Save best weights:** After training, manually copy `runs/<RUN_NAME>/weights/best.pt` to a safe location for production use.
+7. **Re-export for inference:** If you trained locally, remember to export the `.pt` file to other formats (ONNX, TensorFlow) if deploying to other systems.
 
 ---
 
